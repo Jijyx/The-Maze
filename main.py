@@ -105,32 +105,70 @@ def generate_path (case, x_max, y_max, escape, labyrinthe):
             
     return path, good_path
 
+
+# def generate_labyrinth_grid(nb_rows, nb_columns):
+#     labyrinth_grid = []
+
+#     # on commence par faire la première ligne de murs du haut
+#     # donc on répète +--- autant de fois qu'il y a de colonnes et on ajoute un + pour fermer
+#     row_content = ['+---'] * nb_columns + ['+']
+#     labyrinth_grid.append(row_content)
+
+#     # on fait les lignes de cases et de murs
+#     # donc on répète |   autant de fois qu'il y a de colonnes et on ajoute un | pour fermer
+#     # puis on répète +--- autant de fois qu'il y a de colonnes et on ajoute un + pour fermer
+#     for i in range(nb_rows):
+#         row_content = ['|   '] * nb_columns + ['|']
+#         labyrinth_grid.append(row_content)
+#         row_content = ['+---'] * nb_columns + ['+']
+#         labyrinth_grid.append(row_content)
+
+#     # on affiche la grille ligne par ligne
+#     for row in labyrinth_grid:
+#         print(''.join(row))
     
-def print_grid(labyrinthe):
-    # on recup le nombre de lignes et de colonnes
-    nb_lines = max(case.y for case in labyrinthe) + 1
-    nb_columns = max(case.x for case in labyrinthe) + 1
+#     return labyrinth_grid
 
-    # Pour chaque ligne
-    for y in range(nb_lines):
-        # on crée une ligne vide
-        line = ""
+def generate_labyrinth_grid(nb_rows, nb_columns, path, good_path):
+    labyrinth_grid = []
 
-        # Pour chaque colonne
-        for x in range(nb_columns):
-            # on regarde si la case existe
-            if any(case.x == x and case.y == y for case in labyrinthe):
-                # Si la case existe, on fait un espace
-                line += " "
+    row_content = ['+']
+    # on regarde la liste de path, si la coordonnée x a +1 alors on enlève le mur de droite
+    # si la coordonnée x a -1 alors on enlève le mur de gauche
+    for i in range(nb_rows):
+        # si la coordonnée y = 0 alors on met un mur en haut
+        if path[i].y == 0:
+            row_content = ['+---'] * nb_columns + ['+']
+        else:
+            row_content = ['+   '] * nb_columns + ['+']
+        labyrinth_grid.append(''.join(row_content))
+        # si la coordonnée x = 0 alors on met un mur à gauche
+        if path[i].x == 0:
+            row_content = ['|'] 
+        else:
+            row_content = [' ']
+        labyrinth_grid.append(''.join(row_content))
+        if path[i].x != 0 and path[i].y != 0:
+            # si la coordonnée x de la case suivante est +1 alors on enlève le mur de droite
+            if good_path[i].x + 1 == good_path[i + 1].x:
+                row_content.append('    ')
             else:
-                # Sinon on met un mur
-                line += "|"
+                row_content.append('   |')
+            labyrinth_grid.append(''.join(row_content))
+            # si la coordonnée y de la case suivante est +1 alors on enlève le mur du bas
+            if good_path[i].y + 1 == good_path[i + 1].y:
+                row_content = ['   +']
+            else:
+                row_content = ['---+']
+            labyrinth_grid.append(''.join(row_content))
 
-            # on met un mur à droite de la case
-            line += "| "
 
-        # Afficher la ligne dans la console
-        print(line)
+    # on affiche la grille ligne par ligne
+    for row in labyrinth_grid:
+        print(''.join(row))
+    
+    return labyrinth_grid
+
 
 
 
@@ -154,5 +192,4 @@ print ("Chemin : ", [(case.x, case.y) for case in good_path])
 
 # on affiche le labyrinthe
 print("\nLabyrinthe : ")
-print_grid(labyrinthe)
-    
+labyrinth_grid = generate_labyrinth_grid(5, 5, path, good_path)
