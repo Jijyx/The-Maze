@@ -23,11 +23,12 @@ def go_through_list (labyrinthe):
 
 
 # Fonction Closure !
-def generate_path (case, x_max, y_max):
-    good_path = []
-    good_path.append(case)
+def generate_path (case, x_max, y_max, escape, labyrinthe):
+    path = []
+    path.append(case)
+    end = False
 
-    def neighbor(case, x_max, y_max):
+    def neighbor(case, x_max, y_max, escape, labyrinthe):
         neighbors = []
         # on ajoute les voisins (haut, bas, droite, gauche)
         if case.x + 1 < x_max:
@@ -41,47 +42,68 @@ def generate_path (case, x_max, y_max):
         return neighbors
 
     # on met la case de départ dans le chemin
-    path = [case]
-    print ("first path : ", path[0].x, path[0].y)
+    good_path = [case]
+    print ("first path : ", good_path[0].x, good_path[0].y)
 
     # tant que j'ai des voisin à visiter
-    while path: 
-        # je récupère la case où je suis
-        actual_case = path[-1]
-        print ("actual case : ", actual_case.x, actual_case.y)
+    # je récupère la case où je suis
+    actual_case = path[-1]
+    actual_case_index = len(path) - 1
+    while len(path) <= len(labyrinthe): 
+        
+        print ("index de la case actuelle : ", actual_case_index)
+        print ("Je suis à la case : ", actual_case.x, actual_case.y)
         # je récupère ses voisins
-        neighbors = neighbor(actual_case, x_max, y_max)
+        neighbors = neighbor(actual_case, x_max, y_max, escape, labyrinthe)
         for i in neighbors:
             print("neighbor : ", i.x, i.y)
         # je crée une liste pour les voisins que j'ai pas visité
         unvisited_neighbors = []  
         
-        print("good_path avant l'itération sur les voisins :", [(case.x, case.y) for case in good_path])
+        
         # pour chaque voisin de ma case actuelle
         for i in neighbors:
             # si je n'ai pas encore visité ce voisin
-            if (i.x, i.y) not in [(case.x, case.y) for case in good_path]:
+            if (i.x, i.y) not in [(case.x, case.y) for case in path]:
                 # je l'ajoute à ma liste de voisin non visité
                 unvisited_neighbors.append(i)
                 print ("unvisited neighbor : ", i.x, i.y)
 
         # si j'ai des voisins non visité
         if unvisited_neighbors:
-            # je choisi un voisin au hasard
-            next_case = random.choice(unvisited_neighbors)
+            # je choisi un voisin au hasard sauf si c'est la sortie
+            if escape in unvisited_neighbors:
+                next_case = escape
+            else:
+                next_case = random.choice(unvisited_neighbors)
             print ("choix parmi :", [(case.x, case.y) for case in unvisited_neighbors])
             print ("next case : ", next_case.x, next_case.y)
             # je l'ajoute à mon chemin (path)
-            path.append(next_case)
+            if end != True:
+                good_path.append(next_case)
             # et je l'ajoute aussi à la liste du bon chemin
-            good_path.append(next_case)
-            for i in good_path:
-                print("good path : ", i.x, i.y)
-        else:
-            # sinon je retourne en arrière et je supprime la case actuelle de mon chemin
-            path.pop()
+            path.append(next_case)
+            actual_case = next_case
+            actual_case_index += 1
+            print ("j'avance à la case : ", actual_case.x, actual_case.y)
+            if next_case.x == escape.x and next_case.y == escape.y:
+                print ("SORTIE WESH")
+                end = True
 
-    return good_path
+        # sinon je retourne en arrière et je supprime la case actuelle de mon chemin
+        else :
+            actual_case_index -= 1
+            if actual_case_index < 0:
+                break
+            actual_case = path[actual_case_index]
+            print("Je retourne à la case précédente :", actual_case.x, actual_case.y)
+
+            if end != True:
+                good_path.pop()
+        print("path :", [(case.x, case.y) for case in path])
+        print ("good path : ", [(case.x, case.y) for case in good_path])
+            
+    return path, good_path
 
     
 def print_grid(labyrinthe):
@@ -120,11 +142,15 @@ print ("Labyrinthe : ", [(case.x, case.y) for case in labyrinthe])
 go_through_list(labyrinthe)
 # on choisi une case de départ
 first_case = Case(0, 0)
+# on choisi un case d'arrivée
+escape_case = Case(4,4)
 # on génère le chemin
-path = generate_path(first_case, 5, 5)
+path, good_path = generate_path(first_case, 5, 5, escape_case, labyrinthe)
 
+# on affiche le constructeur
+print ("Constructeur : ", [(case.x, case.y) for case in path])
 # on affiche le chemin
-print ("Chemin : ", [(case.x, case.y) for case in path])
+print ("Chemin : ", [(case.x, case.y) for case in good_path])
 
 # on affiche le labyrinthe
 print("\nLabyrinthe : ")
