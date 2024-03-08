@@ -1,9 +1,11 @@
 import random
 
+
 class Case:
-    def __init__(self, x, y):
+    def __init__(self, x, y, parent = None):
         self.x = x
         self.y = y
+        self.parent = parent
 
 
 # Première fonction pure !
@@ -28,17 +30,17 @@ def generate_path (case, x_max, y_max, escape, labyrinthe):
     path.append(case)
     end = False
 
-    def neighbor(case, x_max, y_max, escape, labyrinthe):
+    def neighbor(case, x_max, y_max):
         neighbors = []
         # on ajoute les voisins (haut, bas, droite, gauche)
         if case.x + 1 < x_max:
-            neighbors.append(Case(case.x + 1, case.y))  # bas
+            neighbors.append(Case(case.x + 1, case.y, case))  # bas
         if case.x - 1 >= 0:
-            neighbors.append(Case(case.x - 1, case.y))  # haut
+            neighbors.append(Case(case.x - 1, case.y, case))  # haut
         if case.y + 1 < y_max:
-            neighbors.append(Case(case.x, case.y + 1))  # droite
+            neighbors.append(Case(case.x, case.y + 1, case))  # droite
         if case.y - 1 >= 0:
-            neighbors.append(Case(case.x, case.y - 1))  # gauche
+            neighbors.append(Case(case.x, case.y - 1, case))  # gauche
         return neighbors
 
     # on met la case de départ dans le chemin
@@ -54,20 +56,13 @@ def generate_path (case, x_max, y_max, escape, labyrinthe):
         print ("index de la case actuelle : ", actual_case_index)
         print ("Je suis à la case : ", actual_case.x, actual_case.y)
         # je récupère ses voisins
-        neighbors = neighbor(actual_case, x_max, y_max, escape, labyrinthe)
-        for i in neighbors:
-            print("neighbor : ", i.x, i.y)
-        # je crée une liste pour les voisins que j'ai pas visité
-        unvisited_neighbors = []  
-        
-        
-        # pour chaque voisin de ma case actuelle
-        for i in neighbors:
-            # si je n'ai pas encore visité ce voisin
-            if (i.x, i.y) not in [(case.x, case.y) for case in path]:
-                # je l'ajoute à ma liste de voisin non visité
-                unvisited_neighbors.append(i)
-                print ("unvisited neighbor : ", i.x, i.y)
+        neighbors = neighbor(actual_case, x_max, y_max)
+
+        # Je crée une liste filtré pour les voisins que j'ai pas visité 
+        # Fonction anonyme lambda + premier ordre avec filter
+        unvisited_neighbors = list(filter(lambda f : (f.x,f.y) not in [(case.x, case.y) for case in path], neighbors))
+        for i in unvisited_neighbors:
+            print ("unvisited neighbor : ", i.x, i.y)
 
         # si j'ai des voisins non visité
         if unvisited_neighbors:
@@ -77,7 +72,7 @@ def generate_path (case, x_max, y_max, escape, labyrinthe):
             else:
                 next_case = random.choice(unvisited_neighbors)
             print ("choix parmi :", [(case.x, case.y) for case in unvisited_neighbors])
-            print ("next case : ", next_case.x, next_case.y)
+            print ("next case : ", next_case.x, next_case.y, next_case.parent.x, next_case.parent.y)
             # je l'ajoute à mon chemin (path)
             if end != True:
                 good_path.append(next_case)
@@ -106,78 +101,11 @@ def generate_path (case, x_max, y_max, escape, labyrinthe):
     return path, good_path
 
 
-# def generate_labyrinth_grid(nb_rows, nb_columns):
-#     labyrinth_grid = []
-
-#     # on commence par faire la première ligne de murs du haut
-#     # donc on répète +--- autant de fois qu'il y a de colonnes et on ajoute un + pour fermer
-#     row_content = ['+---'] * nb_columns + ['+']
-#     labyrinth_grid.append(row_content)
-
-#     # on fait les lignes de cases et de murs
-#     # donc on répète |   autant de fois qu'il y a de colonnes et on ajoute un | pour fermer
-#     # puis on répète +--- autant de fois qu'il y a de colonnes et on ajoute un + pour fermer
-#     for i in range(nb_rows):
-#         row_content = ['|   '] * nb_columns + ['|']
-#         labyrinth_grid.append(row_content)
-#         row_content = ['+---'] * nb_columns + ['+']
-#         labyrinth_grid.append(row_content)
-
-#     # on affiche la grille ligne par ligne
-#     for row in labyrinth_grid:
-#         print(''.join(row))
-    
-#     return labyrinth_grid
-
-def generate_labyrinth_grid(nb_rows, nb_columns, path, good_path):
-    labyrinth_grid = []
-
-    row_content = ['+']
-    # on regarde la liste de path, si la coordonnée x a +1 alors on enlève le mur de droite
-    # si la coordonnée x a -1 alors on enlève le mur de gauche
-    for i in range(nb_rows):
-        # si la coordonnée y = 0 alors on met un mur en haut
-        if path[i].y == 0:
-            row_content = ['+---'] * nb_columns + ['+']
-        else:
-            row_content = ['+   '] * nb_columns + ['+']
-        labyrinth_grid.append(''.join(row_content))
-        # si la coordonnée x = 0 alors on met un mur à gauche
-        if path[i].x == 0:
-            row_content = ['|'] 
-        else:
-            row_content = [' ']
-        labyrinth_grid.append(''.join(row_content))
-        if path[i].x != 0 and path[i].y != 0:
-            # si la coordonnée x de la case suivante est +1 alors on enlève le mur de droite
-            if good_path[i].x + 1 == good_path[i + 1].x:
-                row_content.append('    ')
-            else:
-                row_content.append('   |')
-            labyrinth_grid.append(''.join(row_content))
-            # si la coordonnée y de la case suivante est +1 alors on enlève le mur du bas
-            if good_path[i].y + 1 == good_path[i + 1].y:
-                row_content = ['   +']
-            else:
-                row_content = ['---+']
-            labyrinth_grid.append(''.join(row_content))
-
-
-    # on affiche la grille ligne par ligne
-    for row in labyrinth_grid:
-        print(''.join(row))
-    
-    return labyrinth_grid
-
-
-
 
 
 # on génère la grille
 labyrinthe = generate_list(5, 5)
 print ("Labyrinthe : ", [(case.x, case.y) for case in labyrinthe])
-# on parcourt la grille
-go_through_list(labyrinthe)
 # on choisi une case de départ
 first_case = Case(0, 0)
 # on choisi un case d'arrivée
@@ -185,11 +113,7 @@ escape_case = Case(4,4)
 # on génère le chemin
 path, good_path = generate_path(first_case, 5, 5, escape_case, labyrinthe)
 
-# on affiche le constructeur
+# on affiche le constructeur (path)
 print ("Constructeur : ", [(case.x, case.y) for case in path])
-# on affiche le chemin
+# on affiche le chemin (good_path)
 print ("Chemin : ", [(case.x, case.y) for case in good_path])
-
-# on affiche le labyrinthe
-print("\nLabyrinthe : ")
-labyrinth_grid = generate_labyrinth_grid(5, 5, path, good_path)
